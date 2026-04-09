@@ -1,12 +1,19 @@
-import { createRemoteJWKSet, jwtVerify } from "jose";
+import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from "jose";
 
 const region = process.env.AWS_REGION || "us-east-1";
 const userPoolId = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID || "";
 const issuer = `https://cognito-idp.${region}.amazonaws.com/${userPoolId}`;
 
-const jwks = createRemoteJWKSet(
-  new URL(`${issuer}/.well-known/jwks.json`)
-);
+// Lazy-init to avoid crashing at module load time
+let _jwks: JWTVerifyGetKey | null = null;
+function getJwks() {
+  if (!_jwks) {
+    _jwks = createRemoteJWKSet(
+      new URL(`${issuer}/.well-known/jwks.json`)
+    );
+  }
+  return _jwks;
+}
 
 export type AuthUser = { userId: string; email: string };
 
@@ -19,7 +26,7 @@ export async function getAuthenticatedUser(
   }
 
   const token = header.slice(7);
-  const { payload } = await jwtVerify(token, jwks, { issuer });
+  const { payload } = await jwtVerify(token, getJwks(), { issuer });
 
   const sub = payload.sub;
   if (!sub) throw new Error("Token missing sub claim");
