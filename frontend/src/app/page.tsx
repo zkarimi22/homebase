@@ -135,13 +135,13 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-10 py-14">
+    <div className="max-w-5xl mx-auto px-4 py-8 sm:px-6 md:px-10 md:py-14">
       {/* Greeting */}
       <FadeIn>
-        <h1 className="text-[2.5rem] leading-tight text-black/25 font-medium mb-1">
+        <h1 className="text-2xl sm:text-[2.5rem] leading-tight text-black/25 font-medium mb-1">
           Welcome back, {displayName}.
         </h1>
-        <h2 className="text-[2.5rem] leading-tight font-extrabold tracking-tight">
+        <h2 className="text-2xl sm:text-[2.5rem] leading-tight font-extrabold tracking-tight">
           It&apos;s {dayName}, {monthDay}.
           <br />
           How can we help?
@@ -150,7 +150,7 @@ export default function Dashboard() {
 
       {/* Search with autocomplete */}
       <FadeIn delay={0.05}>
-        <div className="mt-10 mb-3 relative" ref={searchRef}>
+        <div className="mt-6 sm:mt-10 mb-3 relative" ref={searchRef}>
           <form onSubmit={handleSearchSubmit}>
             <div className="flex items-center bg-white border border-black/[0.06] rounded-2xl px-5 py-4 transition-all focus-within:border-black/15 focus-within:shadow-sm">
               <Search size={18} className="text-black/20 mr-3 flex-shrink-0" />
@@ -311,7 +311,7 @@ export default function Dashboard() {
               View all &rarr;
             </Link>
           </div>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             {[
               {
                 icon: <DollarSign size={15} />,
@@ -348,7 +348,7 @@ export default function Dashboard() {
                   </div>
                   <span className="text-[13px] font-semibold">{card.label}</span>
                 </div>
-                <p className="text-2xl font-extrabold tracking-tight mb-0.5">
+                <p className="text-lg sm:text-2xl font-extrabold tracking-tight mb-0.5">
                   {card.value}
                 </p>
                 <p className="text-xs text-black/30 font-medium">{card.sub}</p>
@@ -376,7 +376,7 @@ export default function Dashboard() {
                 </p>
               </div>
             </div>
-            <div className="grid grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 md:gap-6">
               {[
                 { icon: <Home size={13} />, label: "Type", value: property.type },
                 { icon: <CalendarDays size={13} />, label: "Year Built", value: String(property.year_built) },
@@ -402,7 +402,7 @@ export default function Dashboard() {
       </FadeIn>
 
       {/* Two-column: Documents + Projects */}
-      <div className="grid grid-cols-2 gap-6 mb-14">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-14">
         {/* Recent Documents */}
         <FadeIn delay={0.2}>
           <div>
@@ -520,7 +520,7 @@ export default function Dashboard() {
               View all &rarr;
             </Link>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {upcomingEvents.slice(0, 3).map((item) => (
               <div
                 key={item.id}

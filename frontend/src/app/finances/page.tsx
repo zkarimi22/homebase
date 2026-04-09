@@ -11,9 +11,9 @@ export default function FinancesPage() {
   );
 
   return (
-    <div className="max-w-5xl mx-auto px-10 py-14">
+    <div className="max-w-5xl mx-auto px-4 py-8 sm:px-6 md:px-10 md:py-14">
       <FadeIn>
-        <h1 className="text-4xl font-extrabold tracking-tight mb-1">
+        <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-1">
           Financial Clarity
         </h1>
         <p className="text-black/35 text-base mb-16 font-medium">
@@ -85,7 +85,7 @@ export default function FinancesPage() {
           {obligations.map((ob) => (
             <div
               key={ob.name}
-              className="flex items-center justify-between px-6 py-5"
+              className="flex items-center justify-between px-4 py-4 sm:px-6 sm:py-5"
             >
               <div>
                 <p className="text-[13px] font-semibold">{ob.name}</p>
@@ -94,10 +94,10 @@ export default function FinancesPage() {
                   {ob.due_day === 1 ? "st" : "th"} &middot; {ob.frequency}
                 </p>
               </div>
-              <p className="text-xl font-extrabold">${fmt(ob.amount)}</p>
+              <p className="text-lg sm:text-xl font-extrabold">${fmt(ob.amount)}</p>
             </div>
           ))}
-          <div className="flex items-center justify-between px-6 py-5 bg-neutral-50 rounded-b-2xl">
+          <div className="flex items-center justify-between px-4 py-4 sm:px-6 sm:py-5 bg-neutral-50 rounded-b-2xl">
             <p className="text-[13px] font-semibold text-black/40">Total monthly</p>
             <p className="text-xl font-extrabold">
               ${fmt(obligations.reduce((s, o) => s + o.amount, 0))}

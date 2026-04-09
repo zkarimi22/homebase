@@ -117,9 +117,9 @@ export default function DocumentsPage() {
     filter === "all" ? docs : docs.filter((d) => d.category === filter);
 
   return (
-    <div className="max-w-5xl mx-auto px-10 py-14">
+    <div className="max-w-5xl mx-auto px-4 py-8 sm:px-6 md:px-10 md:py-14">
       <FadeIn>
-        <h1 className="text-4xl font-extrabold tracking-tight mb-1">Documents</h1>
+        <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-1">Documents</h1>
         <p className="text-black/35 text-base mb-12 font-medium">
           Securely store and organize your important files.
         </p>
@@ -241,36 +241,34 @@ export default function DocumentsPage() {
         <div className="space-y-2">
           {filtered.map((doc, i) => (
             <FadeIn key={doc.documentId} delay={0.03 * i}>
-              <div className="flex items-center justify-between p-4 bg-white border border-black/[0.06] rounded-xl hover:border-black/10 transition-all group">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center">
-                    <FileText size={17} className="text-black/25" />
-                  </div>
-                  <div>
-                    <p className="text-[13px] font-semibold">{doc.name}</p>
-                    <p className="text-xs text-black/30">
-                      {new Date(doc.uploadedAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                      {doc.sizeKb > 0 && <> &middot; {(doc.sizeKb / 1024).toFixed(1)} MB</>}
-                    </p>
-                  </div>
+              <div className="flex items-center gap-3 p-3 sm:p-4 bg-white border border-black/[0.06] rounded-xl hover:border-black/10 transition-all group">
+                <div className="w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FileText size={17} className="text-black/25" />
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] px-2.5 py-0.5 rounded-md bg-neutral-100 text-black/35 font-medium">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold truncate">{doc.name}</p>
+                  <p className="text-xs text-black/30">
+                    {new Date(doc.uploadedAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                    {doc.sizeKb > 0 && <> &middot; {(doc.sizeKb / 1024).toFixed(1)} MB</>}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                  <span className="hidden sm:inline text-[11px] px-2.5 py-0.5 rounded-md bg-neutral-100 text-black/35 font-medium">
                     {doc.category}
                   </span>
                   <button
                     onClick={() => handleDownload(doc)}
-                    className="p-1.5 rounded-lg text-black/20 hover:text-black/60 hover:bg-neutral-100 transition-all opacity-0 group-hover:opacity-100"
+                    className="p-1.5 rounded-lg text-black/20 hover:text-black/60 hover:bg-neutral-100 transition-all md:opacity-0 md:group-hover:opacity-100"
                   >
                     <Download size={15} />
                   </button>
                   <button
                     onClick={() => handleDelete(doc)}
-                    className="p-1.5 rounded-lg text-black/20 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
+                    className="p-1.5 rounded-lg text-black/20 hover:text-red-500 hover:bg-red-50 transition-all md:opacity-0 md:group-hover:opacity-100"
                   >
                     <Trash2 size={15} />
                   </button>

@@ -35,3 +35,7 @@ body {
 .animate-splash-pulse {
   animation: splash-pulse 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0.5rem);
+}

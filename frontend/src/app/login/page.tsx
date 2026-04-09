@@ -96,7 +96,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-white w-full">
       {/* Top bar */}
-      <header className="fixed top-0 left-0 right-0 flex items-center px-8 py-5 bg-white z-10">
+      <header className="fixed top-0 left-0 right-0 flex items-center px-4 py-4 sm:px-8 sm:py-5 bg-white z-10">
         <div className="flex items-center gap-2.5">
           <Image
             src="/opendoor-img.png"

@@ -132,18 +132,18 @@ export default function ProjectsPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-10 py-14">
+    <div className="max-w-5xl mx-auto px-4 py-8 sm:px-6 md:px-10 md:py-14">
       <FadeIn>
-        <div className="flex items-center justify-between mb-12">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-12">
           <div>
-            <h1 className="text-4xl font-extrabold tracking-tight mb-1">Projects</h1>
-            <p className="text-black/35 text-base font-medium">
+            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-1">Projects</h1>
+            <p className="text-black/35 text-sm sm:text-base font-medium">
               Track every home improvement from plan to completion.
             </p>
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 px-5 py-3 bg-[#3B5EFB] text-white text-sm font-semibold rounded-xl hover:bg-[#2D4DE0] transition-colors"
+            className="flex items-center justify-center gap-2 px-5 py-3 bg-[#3B5EFB] text-white text-sm font-semibold rounded-xl hover:bg-[#2D4DE0] transition-colors flex-shrink-0"
           >
             <Plus size={16} />
             New project
@@ -297,19 +297,19 @@ export default function ProjectsPage() {
                     </button>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                         <p
-                          className={`text-[13px] font-semibold ${
+                          className={`text-[13px] font-semibold truncate ${
                             project.status === "completed" ? "line-through text-black/30" : ""
                           }`}
                         >
                           {project.title}
                         </p>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-lg font-semibold ${sf.color}`}>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-lg font-semibold flex-shrink-0 ${sf.color}`}>
                           {sf.label}
                         </span>
                         <span
-                          className={`text-[10px] px-2 py-0.5 rounded-lg font-semibold ${
+                          className={`text-[10px] px-2 py-0.5 rounded-lg font-semibold flex-shrink-0 ${
                             project.priority === "high"
                               ? "bg-red-50 text-red-500"
                               : project.priority === "medium"

@@ -22,9 +22,9 @@ export default function NeighborhoodPage() {
   );
 
   return (
-    <div className="max-w-5xl mx-auto px-10 py-14">
+    <div className="max-w-5xl mx-auto px-4 py-8 sm:px-6 md:px-10 md:py-14">
       <FadeIn>
-        <h1 className="text-4xl font-extrabold tracking-tight mb-1">
+        <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-1">
           Neighborhood
         </h1>
         <p className="text-black/35 text-base mb-16 font-medium">

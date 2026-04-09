@@ -17,7 +17,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         ) : (
           <>
             <Sidebar />
-            <main className="flex-1 ml-[84px] min-h-screen">{children}</main>
+            <main className="flex-1 md:ml-[84px] min-h-screen pb-20 md:pb-0">{children}</main>
           </>
         )}
       </AuthGate>
