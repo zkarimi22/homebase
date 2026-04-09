@@ -22,3 +22,13 @@ output "documents_bucket" {
   description = "S3 bucket for document storage"
   value       = module.s3.documents_bucket_id
 }
+
+output "documents_table" {
+  description = "DynamoDB table for document metadata"
+  value       = module.dynamodb.documents_table_name
+}
+
+output "projects_table" {
+  description = "DynamoDB table for projects"
+  value       = module.dynamodb.projects_table_name
+}

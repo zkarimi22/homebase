@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import FadeIn from "@/components/FadeIn";
 import { useAuth } from "@/lib/auth";
+import { useChat } from "@ai-sdk/react";
 import {
   property,
   financeSummary,
@@ -35,7 +36,12 @@ import {
   Bed,
   Bath,
   Ruler,
+  Loader2,
+  X,
+  Sparkles,
 } from "lucide-react";
+
+type DocResult = { documentId: string; name: string; category: string };
 
 const suggestions = [
   "Spring checklist",
@@ -58,8 +64,58 @@ const monthDay = today.toLocaleDateString("en-US", {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const userId = user?.userId || "default";
   const [query, setQuery] = useState("");
+  const [docResults, setDocResults] = useState<DocResult[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const displayName = user?.name?.split(" ")[0] || profile.name.split(" ")[0];
+
+  const [chatInput, setChatInput] = useState("");
+  const { messages, sendMessage, status } = useChat({});
+  const chatLoading = status === "streaming" || status === "submitted";
+
+  // Document search autocomplete
+  const searchDocs = useCallback(async (q: string) => {
+    if (q.length < 2) { setDocResults([]); return; }
+    try {
+      const res = await fetch(`/api/documents/search?userId=${userId}&q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      setDocResults(data.results || []);
+      setShowResults(true);
+    } catch { setDocResults([]); }
+  }, [userId]);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => searchDocs(query), 200);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [query, searchDocs]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+    // If no doc matches, open AI chat
+    if (docResults.length === 0) {
+      setShowChat(true);
+      setShowResults(false);
+      sendMessage({ text: query });
+      setChatInput("");
+    }
+  };
   const activeProjects = projects.filter((p) => p.status === "in_progress");
   const plannedProjects = projects.filter((p) => p.status === "planned");
   const completedProjects = projects.filter((p) => p.status === "completed");
@@ -90,22 +146,62 @@ export default function Dashboard() {
         </h2>
       </FadeIn>
 
-      {/* Search */}
+      {/* Search with autocomplete */}
       <FadeIn delay={0.05}>
-        <div className="mt-10 mb-3 relative">
-          <div className="flex items-center bg-white border border-black/[0.06] rounded-2xl px-5 py-4 transition-all focus-within:border-black/15 focus-within:shadow-sm">
-            <Search size={18} className="text-black/20 mr-3 flex-shrink-0" />
-            <input
-              type="text"
-              placeholder="Ask a question, find a file, or make a request"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="flex-1 text-sm outline-none bg-transparent placeholder:text-black/25"
-            />
-            <button className="text-black/15 hover:text-black/40 transition-colors ml-3">
-              <ArrowRight size={18} />
-            </button>
-          </div>
+        <div className="mt-10 mb-3 relative" ref={searchRef}>
+          <form onSubmit={handleSearchSubmit}>
+            <div className="flex items-center bg-white border border-black/[0.06] rounded-2xl px-5 py-4 transition-all focus-within:border-black/15 focus-within:shadow-sm">
+              <Search size={18} className="text-black/20 mr-3 flex-shrink-0" />
+              <input
+                type="text"
+                placeholder="Ask a question, find a file, or make a request"
+                value={query}
+                onChange={(e) => { setQuery(e.target.value); setShowResults(true); }}
+                onFocus={() => query.length >= 2 && setShowResults(true)}
+                className="flex-1 text-sm outline-none bg-transparent placeholder:text-black/25"
+              />
+              <button type="submit" className="text-black/15 hover:text-black/40 transition-colors ml-3">
+                <ArrowRight size={18} />
+              </button>
+            </div>
+          </form>
+
+          {/* Autocomplete dropdown */}
+          {showResults && query.length >= 2 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-black/[0.06] rounded-xl shadow-lg overflow-hidden z-40">
+              {docResults.length > 0 ? (
+                <>
+                  <p className="px-4 pt-3 pb-1 text-[10px] text-black/30 uppercase tracking-widest font-semibold">
+                    Documents
+                  </p>
+                  {docResults.map((doc) => (
+                    <Link
+                      key={doc.documentId}
+                      href="/documents"
+                      onClick={() => { setShowResults(false); setQuery(""); }}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 transition-colors"
+                    >
+                      <FileText size={14} className="text-black/25" />
+                      <span className="text-sm">{doc.name}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-100 text-black/30 ml-auto">
+                        {doc.category}
+                      </span>
+                    </Link>
+                  ))}
+                  <div className="border-t border-black/[0.04]" />
+                </>
+              ) : null}
+              <button
+                onClick={() => { setShowChat(true); setShowResults(false); sendMessage({ text: query }); }}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 transition-colors w-full text-left"
+              >
+                <Sparkles size={14} className="text-[#3B5EFB]" />
+                <span className="text-sm text-[#3B5EFB] font-medium">
+                  Ask AI: &ldquo;{query}&rdquo;
+                </span>
+              </button>
+            </div>
+          )}
         </div>
       </FadeIn>
 
@@ -119,6 +215,7 @@ export default function Dashboard() {
             {suggestions.map((s) => (
               <button
                 key={s}
+                onClick={() => { setShowChat(true); sendMessage({ text: s }); }}
                 className="flex items-center gap-1.5 text-xs px-3.5 py-2 rounded-full bg-white border border-black/[0.06] text-black/50 hover:border-black/12 hover:text-black/70 transition-all font-medium"
               >
                 <span className="opacity-40">&#10038;</span>
@@ -128,6 +225,75 @@ export default function Dashboard() {
           </div>
         </div>
       </FadeIn>
+
+      {/* AI Chat panel */}
+      {showChat && (
+        <FadeIn>
+          <div className="mb-14 bg-white border border-black/[0.06] rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-black/[0.04]">
+              <div className="flex items-center gap-2">
+                <Sparkles size={14} className="text-[#3B5EFB]" />
+                <span className="text-xs font-semibold text-black/50">Homebase AI</span>
+              </div>
+              <button onClick={() => setShowChat(false)} className="text-black/20 hover:text-black/50">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="max-h-80 overflow-y-auto p-5 space-y-4">
+              {messages.map((m) => {
+                const text = m.parts
+                  ?.filter((p): p is { type: "text"; text: string } => p.type === "text")
+                  .map((p) => p.text)
+                  .join("") || "";
+                return (
+                  <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                    <div
+                      className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                        m.role === "user"
+                          ? "bg-[#3B5EFB] text-white"
+                          : "bg-neutral-100 text-black/70"
+                      }`}
+                    >
+                      {text}
+                    </div>
+                  </div>
+                );
+              })}
+              {chatLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-neutral-100 px-4 py-2.5 rounded-2xl">
+                    <Loader2 size={14} className="animate-spin text-black/30" />
+                  </div>
+                </div>
+              )}
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!chatInput.trim() || chatLoading) return;
+                sendMessage({ text: chatInput });
+                setChatInput("");
+              }}
+              className="border-t border-black/[0.04] p-3 flex gap-2"
+            >
+              <input
+                type="text"
+                placeholder="Ask a follow-up..."
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                className="flex-1 px-4 py-2.5 bg-neutral-50 rounded-xl text-sm outline-none"
+              />
+              <button
+                type="submit"
+                disabled={chatLoading || !chatInput.trim()}
+                className="px-4 py-2.5 bg-[#3B5EFB] text-white rounded-xl text-sm font-semibold disabled:opacity-50"
+              >
+                Send
+              </button>
+            </form>
+          </div>
+        </FadeIn>
+      )}
 
       {/* Home Details */}
       <FadeIn delay={0.1}>

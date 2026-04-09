@@ -50,6 +50,12 @@ module "lambda" {
   documents_bucket_id  = module.s3.documents_bucket_id
 }
 
+# ── DynamoDB ─────────────────────────────────────────────────
+module "dynamodb" {
+  source = "./modules/dynamodb"
+  prefix = local.prefix
+}
+
 # ── API Gateway ──────────────────────────────────────────────
 module "api_gateway" {
   source = "./modules/api-gateway"
