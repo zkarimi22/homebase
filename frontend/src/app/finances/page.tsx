@@ -69,7 +69,7 @@ export default function FinancesPage() {
           </div>
           <div className="h-3 bg-neutral-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-black rounded-full transition-all duration-1000"
+              className="h-full bg-[#3B5EFB] rounded-full transition-all duration-1000"
               style={{ width: `${equityPercent}%` }}
             />
           </div>

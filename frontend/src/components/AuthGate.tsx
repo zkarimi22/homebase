@@ -2,12 +2,19 @@
 
 import { useAuth } from "@/lib/auth";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import Image from "next/image";
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMinTimeElapsed(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const isLoginPage = pathname === "/login";
 
@@ -30,10 +37,19 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   const poolId = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID;
   if (!poolId) return <>{children}</>;
 
-  if (loading) {
+  const showSplash = loading || !minTimeElapsed;
+
+  if (showSplash) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
-        <div className="w-5 h-5 border-2 border-black/10 border-t-black/50 rounded-full animate-spin" />
+      <div className="fixed inset-0 w-full h-full bg-[#0042e6] flex items-center justify-center z-[9999]">
+        <Image
+          src="/Opendoor-Icon-Logo.wine.svg"
+          alt="Homebase"
+          width={200}
+          height={200}
+          className="animate-splash-pulse"
+          priority
+        />
       </div>
     );
   }

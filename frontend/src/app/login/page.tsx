@@ -33,7 +33,7 @@ export default function LoginPage() {
     try {
       await login(email, password);
       setView("loading");
-      setTimeout(() => router.push("/"), 1800);
+      setTimeout(() => router.push("/"), 1500);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed");
       setSubmitting(false);
@@ -51,7 +51,7 @@ export default function LoginPage() {
       } else {
         await login(email, password);
         setView("loading");
-        setTimeout(() => router.push("/"), 1800);
+        setTimeout(() => router.push("/"), 1500);
         return;
       }
     } catch (err: unknown) {
@@ -69,7 +69,7 @@ export default function LoginPage() {
       await confirm(email, code);
       await login(email, password);
       setView("loading");
-      setTimeout(() => router.push("/"), 1800);
+      setTimeout(() => router.push("/"), 1500);
       return;
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Confirmation failed");
@@ -80,13 +80,13 @@ export default function LoginPage() {
 
   if (view === "loading") {
     return (
-      <div className="min-h-screen bg-[#3B5EFB] flex items-center justify-center">
+      <div className="fixed inset-0 w-full h-full bg-[#3B5EFB] flex items-center justify-center z-[9999]">
         <Image
-          src="/favicon.ico"
+          src="/Opendoor-Icon-Logo.wine.svg"
           alt="Homebase"
-          width={80}
-          height={80}
-          className="animate-pulse brightness-0 invert"
+          width={200}
+          height={200}
+          className="animate-splash-pulse"
           priority
         />
       </div>

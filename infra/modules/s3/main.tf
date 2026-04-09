@@ -29,6 +29,18 @@ resource "aws_s3_bucket_public_access_block" "documents" {
   restrict_public_buckets = true
 }
 
+resource "aws_s3_bucket_cors_configuration" "documents" {
+  bucket = aws_s3_bucket.documents.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT", "POST", "HEAD"]
+    allowed_origins = ["http://localhost:3000", "http://localhost:3001", "https://homebase.zkarimi.com", "https://d3itjojnsn9ae0.amplifyapp.com"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3600
+  }
+}
+
 # Frontend assets bucket (for future CloudFront deployment)
 resource "aws_s3_bucket" "frontend" {
   bucket = "${var.prefix}-frontend"

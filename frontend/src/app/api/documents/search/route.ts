@@ -10,18 +10,22 @@ export async function GET(request: Request) {
     return Response.json({ results: [] });
   }
 
-  const result = await ddb.send(
-    new QueryCommand({
-      TableName: DOCUMENTS_TABLE,
-      KeyConditionExpression: "userId = :uid",
-      ExpressionAttributeValues: { ":uid": userId },
-    })
-  );
+  try {
+    const result = await ddb.send(
+      new QueryCommand({
+        TableName: DOCUMENTS_TABLE,
+        KeyConditionExpression: "userId = :uid",
+        ExpressionAttributeValues: { ":uid": userId },
+      })
+    );
 
-  const matches = (result.Items || [])
-    .filter((d) => d.name?.toLowerCase().includes(q) || d.category?.toLowerCase().includes(q))
-    .slice(0, 8)
-    .map((d) => ({ documentId: d.documentId, name: d.name, category: d.category }));
+    const matches = (result.Items || [])
+      .filter((d) => d.name?.toLowerCase().includes(q) || d.category?.toLowerCase().includes(q))
+      .slice(0, 8)
+      .map((d) => ({ documentId: d.documentId, name: d.name, category: d.category }));
 
-  return Response.json({ results: matches });
+    return Response.json({ results: matches });
+  } catch {
+    return Response.json({ results: [] });
+  }
 }

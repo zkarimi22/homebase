@@ -20,3 +20,18 @@ body {
   background: #000;
   color: #fff;
 }
+
+@keyframes splash-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.92);
+  }
+}
+
+.animate-splash-pulse {
+  animation: splash-pulse 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

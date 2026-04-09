@@ -29,9 +29,6 @@ import {
   Recycle,
   AlertTriangle,
   Users,
-  CheckCircle2,
-  Clock,
-  ListTodo,
   Home,
   Bed,
   Bath,
@@ -40,6 +37,11 @@ import {
   X,
   Sparkles,
 } from "lucide-react";
+import {
+  CheckCircleIcon,
+  ClockIcon,
+  ClipboardDocumentListIcon,
+} from "@heroicons/react/24/solid";
 
 type DocResult = { documentId: string; name: string; category: string };
 
@@ -113,7 +115,7 @@ export default function Dashboard() {
       setShowChat(true);
       setShowResults(false);
       sendMessage({ text: query });
-      setChatInput("");
+      setQuery("");
     }
   };
   const activeProjects = projects.filter((p) => p.status === "in_progress");
@@ -192,11 +194,11 @@ export default function Dashboard() {
                 </>
               ) : null}
               <button
-                onClick={() => { setShowChat(true); setShowResults(false); sendMessage({ text: query }); }}
+                onClick={() => { setShowChat(true); setShowResults(false); sendMessage({ text: query }); setQuery(""); }}
                 className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 transition-colors w-full text-left"
               >
                 <Sparkles size={14} className="text-[#3B5EFB]" />
-                <span className="text-sm text-[#3B5EFB] font-medium">
+                <span className="text-sm text-[#3B5EFB] font-bold">
                   Ask AI: &ldquo;{query}&rdquo;
                 </span>
               </button>
@@ -229,7 +231,7 @@ export default function Dashboard() {
       {/* AI Chat panel */}
       {showChat && (
         <FadeIn>
-          <div className="mb-14 bg-white border border-black/[0.06] rounded-2xl overflow-hidden">
+          <div className="mb-14 bg-white border border-black/[0.06] rounded-2xl overflow-hidden max-h-[500px] flex flex-col">
             <div className="flex items-center justify-between px-5 py-3 border-b border-black/[0.04]">
               <div className="flex items-center gap-2">
                 <Sparkles size={14} className="text-[#3B5EFB]" />
@@ -239,7 +241,7 @@ export default function Dashboard() {
                 <X size={16} />
               </button>
             </div>
-            <div className="max-h-80 overflow-y-auto p-5 space-y-4">
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
               {messages.map((m) => {
                 const text = m.parts
                   ?.filter((p): p is { type: "text"; text: string } => p.type === "text")
@@ -341,7 +343,7 @@ export default function Dashboard() {
                 className="bg-white border border-black/[0.06] rounded-2xl p-5"
               >
                 <div className="flex items-center gap-2.5 mb-4">
-                  <div className="w-7 h-7 rounded-lg bg-neutral-100 flex items-center justify-center text-black/35">
+                  <div className="w-7 h-7 flex items-center justify-center text-black/35">
                     {card.icon}
                   </div>
                   <span className="text-[13px] font-semibold">{card.label}</span>
@@ -364,7 +366,7 @@ export default function Dashboard() {
           </h3>
           <div className="bg-white border border-black/[0.06] rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 rounded-xl bg-neutral-100 flex items-center justify-center">
+              <div className="w-9 h-9 flex items-center justify-center">
                 <Home size={17} className="text-black/35" />
               </div>
               <div>
@@ -383,7 +385,7 @@ export default function Dashboard() {
                 { icon: <Bath size={13} />, label: "Bathrooms", value: String(property.bathrooms) },
               ].map((item) => (
                 <div key={item.label} className="flex items-start gap-2.5">
-                  <div className="w-6 h-6 rounded-md bg-neutral-100 flex items-center justify-center flex-shrink-0 mt-0.5 text-black/25">
+                  <div className="w-6 h-6 flex items-center justify-center flex-shrink-0 mt-0.5 text-black/25">
                     {item.icon}
                   </div>
                   <div>
@@ -421,7 +423,7 @@ export default function Dashboard() {
                   key={doc.id}
                   className="flex items-center gap-3 p-3.5 bg-white border border-black/[0.06] rounded-xl hover:border-black/10 transition-all"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-neutral-100 flex items-center justify-center flex-shrink-0">
+                  <div className="w-9 h-9 flex items-center justify-center flex-shrink-0">
                     <FileText size={16} className="text-black/25" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -457,23 +459,17 @@ export default function Dashboard() {
             </div>
             <div className="grid grid-cols-3 gap-3 mb-4">
               <div className="bg-white border border-black/[0.06] rounded-xl p-4 text-center">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center mx-auto mb-2">
-                  <CheckCircle2 size={16} className="text-emerald-500" />
-                </div>
+                <CheckCircleIcon className="w-5 h-5 text-emerald-500 mx-auto mb-2" />
                 <p className="text-xl font-extrabold">{completedProjects.length}</p>
                 <p className="text-[11px] text-black/30 font-medium">Completed</p>
               </div>
               <div className="bg-white border border-black/[0.06] rounded-xl p-4 text-center">
-                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center mx-auto mb-2">
-                  <Clock size={16} className="text-amber-500" />
-                </div>
+                <ClockIcon className="w-5 h-5 text-amber-500 mx-auto mb-2" />
                 <p className="text-xl font-extrabold">{activeProjects.length}</p>
                 <p className="text-[11px] text-black/30 font-medium">In Progress</p>
               </div>
               <div className="bg-white border border-black/[0.06] rounded-xl p-4 text-center">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center mx-auto mb-2">
-                  <ListTodo size={16} className="text-blue-500" />
-                </div>
+                <ClipboardDocumentListIcon className="w-5 h-5 text-blue-500 mx-auto mb-2" />
                 <p className="text-xl font-extrabold">{plannedProjects.length}</p>
                 <p className="text-[11px] text-black/30 font-medium">Planned</p>
               </div>
@@ -484,7 +480,7 @@ export default function Dashboard() {
                   key={p.id}
                   className="flex items-center gap-3 p-3.5 bg-white border border-black/[0.06] rounded-xl"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                  <div className="w-9 h-9 flex items-center justify-center flex-shrink-0">
                     <Hammer size={16} className="text-amber-500" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -531,7 +527,7 @@ export default function Dashboard() {
                 className="bg-white border border-black/[0.06] rounded-2xl p-5"
               >
                 <div className="flex items-center justify-between mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center text-black/30">
+                  <div className="w-8 h-8 flex items-center justify-center text-black/30">
                     {feedIcons[item.type]}
                   </div>
                   <span className="text-[11px] text-black/25 font-medium">
