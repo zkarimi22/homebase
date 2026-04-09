@@ -7,6 +7,9 @@ import Image from "next/image";
 
 type View = "login" | "password" | "register" | "confirm" | "loading";
 
+const DEMO_EMAIL = "zalmaykarimi1@gmail.com";
+const DEMO_PASSWORD = "newTest123!";
+
 export default function LoginPage() {
   const { login, register, confirm } = useAuth();
   const router = useRouter();
@@ -26,16 +29,31 @@ export default function LoginPage() {
     setView("password");
   };
 
+  const completeLogin = async (nextEmail: string, nextPassword: string) => {
+    await login(nextEmail, nextPassword);
+    setView("loading");
+    setTimeout(() => router.push("/"), 1500);
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSubmitting(true);
     try {
-      await login(email, password);
-      setView("loading");
-      setTimeout(() => router.push("/"), 1500);
+      await completeLogin(email, password);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed");
+      setSubmitting(false);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setError("");
+    setSubmitting(true);
+    try {
+      await completeLogin(DEMO_EMAIL, DEMO_PASSWORD);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Demo login failed");
       setSubmitting(false);
     }
   };
@@ -49,9 +67,7 @@ export default function LoginPage() {
       if (needsConfirmation) {
         setView("confirm");
       } else {
-        await login(email, password);
-        setView("loading");
-        setTimeout(() => router.push("/"), 1500);
+        await completeLogin(email, password);
         return;
       }
     } catch (err: unknown) {
@@ -67,9 +83,7 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await confirm(email, code);
-      await login(email, password);
-      setView("loading");
-      setTimeout(() => router.push("/"), 1500);
+      await completeLogin(email, password);
       return;
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Confirmation failed");
@@ -131,6 +145,17 @@ export default function LoginPage() {
           {/* Step 1: Email */}
           {view === "login" && (
             <form onSubmit={handleContinue}>
+              <button
+                type="button"
+                onClick={handleDemoLogin}
+                disabled={submitting}
+                className="mb-4 w-full rounded-2xl border border-[#3B5EFB]/15 bg-[#3B5EFB]/5 px-5 py-4 text-base font-semibold text-[#3B5EFB] transition-colors hover:bg-[#3B5EFB]/10 disabled:opacity-50"
+              >
+                {submitting ? "Opening demo..." : "Login with Demo Credentials"}
+              </button>
+              <p className="mb-6 text-center text-sm text-black/45">
+                Opens the app with the OpenDoor demo account in one click.
+              </p>
               <label className="block text-base font-bold mb-2">
                 Email <span className="text-red-500">*</span>
               </label>
@@ -297,4 +322,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

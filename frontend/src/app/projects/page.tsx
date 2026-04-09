@@ -131,6 +131,8 @@ export default function ProjectsPage() {
     completed: projects.filter((p) => p.status === "completed").length,
   };
 
+  const formatBudget = (budget: number) => `$${budget.toLocaleString()}`;
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 sm:px-6 md:px-10 md:py-14">
       <FadeIn>
@@ -143,7 +145,7 @@ export default function ProjectsPage() {
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center justify-center gap-2 px-5 py-3 bg-[#3B5EFB] text-white text-sm font-semibold rounded-xl hover:bg-[#2D4DE0] transition-colors flex-shrink-0"
+            className="flex w-full sm:w-auto items-center justify-center gap-2 px-5 py-3 bg-[#3B5EFB] text-white text-sm font-semibold rounded-xl hover:bg-[#2D4DE0] transition-colors flex-shrink-0"
           >
             <Plus size={16} />
             New project
@@ -153,11 +155,11 @@ export default function ProjectsPage() {
 
       {/* Status counts */}
       <FadeIn delay={0.1}>
-        <div className="grid grid-cols-3 gap-4 mb-10">
+        <div className="grid grid-cols-1 gap-3 mb-10 sm:grid-cols-3 sm:gap-4">
           {(["planned", "in_progress", "completed"] as const).map((s) => (
             <div
               key={s}
-              className="bg-white border border-black/[0.06] rounded-2xl p-5 text-center"
+              className="bg-white border border-black/[0.06] rounded-2xl p-4 text-center sm:p-5"
             >
               <div
                 className={`w-9 h-9 rounded-lg ${statusFlow[s].color} flex items-center justify-center mx-auto mb-2`}
@@ -173,12 +175,13 @@ export default function ProjectsPage() {
 
       {/* Filters */}
       <FadeIn delay={0.12}>
-        <div className="flex gap-2 mb-8">
+        <div className="mb-8 -mx-1 overflow-x-auto px-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex min-w-max gap-2">
           {filters.map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 text-xs uppercase tracking-wider rounded-full font-semibold transition-all ${
+              className={`whitespace-nowrap px-4 py-1.5 text-xs uppercase tracking-wider rounded-full font-semibold transition-all ${
                 filter === f
                   ? "bg-black text-white"
                   : "bg-white border border-black/[0.06] text-black/40 hover:text-black/60"
@@ -187,15 +190,16 @@ export default function ProjectsPage() {
               {f === "all" ? "All" : statusFlow[f]?.label || f}
             </button>
           ))}
+          </div>
         </div>
       </FadeIn>
 
       {/* Create modal */}
       {showCreate && (
-        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 px-4 py-6 sm:px-6">
           <form
             onSubmit={createProject}
-            className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl"
+            className="max-h-full w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-xl sm:p-6"
           >
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-bold">New project</h3>
@@ -219,7 +223,7 @@ export default function ProjectsPage() {
               rows={3}
               className="w-full px-4 py-3 bg-white border border-black/10 rounded-xl text-sm outline-none focus:border-black/25 transition-colors mb-3 resize-none"
             />
-            <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="block text-xs font-semibold text-black/40 mb-1 uppercase tracking-wider">
                   Priority
@@ -281,12 +285,12 @@ export default function ProjectsPage() {
             const sf = statusFlow[project.status];
             return (
               <FadeIn key={project.projectId} delay={0.03 * i}>
-                <div className="bg-white border border-black/[0.06] rounded-xl hover:border-black/10 transition-all group">
-                  <div className="flex items-center gap-3 px-5 py-4">
+                <div className="group rounded-xl border border-black/[0.06] bg-white transition-all hover:border-black/10">
+                  <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:gap-3 sm:px-5">
                     {/* Status advance button */}
                     <button
                       onClick={() => advanceStatus(project)}
-                      className={`w-8 h-8 rounded-lg ${sf.color} flex items-center justify-center flex-shrink-0 hover:scale-110 transition-transform`}
+                      className={`flex h-9 w-9 items-center justify-center rounded-lg ${sf.color} flex-shrink-0 transition-transform hover:scale-110`}
                       title={`Move to ${statusFlow[project.status]?.next}`}
                     >
                       {project.status === "completed" ? (
@@ -296,7 +300,7 @@ export default function ProjectsPage() {
                       )}
                     </button>
 
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                         <p
                           className={`text-[13px] font-semibold truncate ${
@@ -327,18 +331,23 @@ export default function ProjectsPage() {
                       )}
                     </div>
 
-                    {project.budget > 0 && (
-                      <p className="text-sm font-bold text-black/50">
-                        ${project.budget.toLocaleString()}
-                      </p>
-                    )}
+                    <div className="flex items-center justify-between gap-3 sm:justify-end">
+                      {project.budget > 0 ? (
+                        <p className="text-sm font-bold text-black/50 sm:text-right">
+                          {formatBudget(project.budget)}
+                        </p>
+                      ) : (
+                        <div />
+                      )}
 
-                    <button
-                      onClick={() => deleteProject(project)}
-                      className="p-1.5 rounded-lg text-black/15 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                      <button
+                        onClick={() => deleteProject(project)}
+                        className="rounded-lg p-1.5 text-black/30 transition-all hover:bg-red-50 hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100"
+                        aria-label={`Delete ${project.title}`}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </FadeIn>
