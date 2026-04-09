@@ -8,7 +8,7 @@ export async function authFetch(
   options: RequestInit = {}
 ): Promise<Response> {
   const session = await fetchAuthSession();
-  const token = session.tokens?.idToken?.toString();
+  const token = session.tokens?.accessToken?.toString();
 
   return fetch(url, {
     ...options,
