@@ -23,6 +23,7 @@ export default function DocumentsPage() {
   const [filter, setFilter] = useState("all");
   const [docs, setDocs] = useState<Doc[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [uploadCategory, setUploadCategory] = useState("other");
@@ -30,13 +31,34 @@ export default function DocumentsPage() {
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const readErrorMessage = async (res: Response, fallback: string) => {
+    const contentType = res.headers.get("content-type") || "";
+
+    try {
+      if (contentType.includes("application/json")) {
+        const data = await res.json();
+        return data.error || fallback;
+      }
+
+      const text = await res.text();
+      return text || fallback;
+    } catch {
+      return fallback;
+    }
+  };
+
   const fetchDocs = useCallback(async () => {
     try {
       const res = await fetch(`/api/documents?userId=${userId}`);
+      if (!res.ok) {
+        throw new Error(await readErrorMessage(res, "Failed to load documents"));
+      }
       const data = await res.json();
       setDocs(data.documents || []);
-    } catch {
-      // Fall back to empty
+      setError("");
+    } catch (err) {
+      setDocs([]);
+      setError(err instanceof Error ? err.message : "Failed to load documents");
     } finally {
       setLoading(false);
     }
@@ -48,6 +70,7 @@ export default function DocumentsPage() {
 
   const uploadFiles = async (files: File[], category: string) => {
     setUploading(true);
+    setError("");
     try {
       for (const file of files) {
         // 1. Get presigned URL
@@ -62,17 +85,24 @@ export default function DocumentsPage() {
             category,
           }),
         });
+        if (!res.ok) {
+          throw new Error(await readErrorMessage(res, `Failed to prepare upload for ${file.name}`));
+        }
         const { uploadUrl } = await res.json();
 
         // 2. Upload to S3
-        await fetch(uploadUrl, {
+        const uploadRes = await fetch(uploadUrl, {
           method: "PUT",
           headers: { "Content-Type": file.type },
           body: file,
         });
+        if (!uploadRes.ok) {
+          throw new Error(`S3 upload failed for ${file.name}`);
+        }
       }
       await fetchDocs();
     } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed");
       console.error("Upload failed:", err);
     } finally {
       setUploading(false);
@@ -100,16 +130,25 @@ export default function DocumentsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ s3Key: doc.s3Key }),
     });
+    if (!res.ok) {
+      setError(await readErrorMessage(res, "Failed to prepare download"));
+      return;
+    }
     const { downloadUrl } = await res.json();
     window.open(downloadUrl, "_blank");
   };
 
   const handleDelete = async (doc: Doc) => {
-    await fetch("/api/documents", {
+    setError("");
+    const res = await fetch("/api/documents", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, documentId: doc.documentId }),
     });
+    if (!res.ok) {
+      setError(await readErrorMessage(res, "Failed to delete document"));
+      return;
+    }
     await fetchDocs();
   };
 
@@ -123,6 +162,11 @@ export default function DocumentsPage() {
         <p className="text-black/35 text-base mb-12 font-medium">
           Securely store and organize your important files.
         </p>
+        {error && (
+          <div className="mt-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {error}
+          </div>
+        )}
       </FadeIn>
 
       {/* Filters */}

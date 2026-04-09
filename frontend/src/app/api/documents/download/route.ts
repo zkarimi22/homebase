@@ -9,13 +9,23 @@ export async function POST(request: Request) {
     return Response.json({ error: "Missing s3Key" }, { status: 400 });
   }
 
-  const command = new GetObjectCommand({
-    Bucket: DOCUMENTS_BUCKET,
-    Key: s3Key,
-  });
+  try {
+    const command = new GetObjectCommand({
+      Bucket: DOCUMENTS_BUCKET,
+      Key: s3Key,
+    });
 
-  // 1 hour download link
-  const downloadUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+    // 1 hour download link
+    const downloadUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
 
-  return Response.json({ downloadUrl });
+    return Response.json({ downloadUrl });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to prepare download";
+    const code =
+      typeof error === "object" && error !== null && "name" in error
+        ? String(error.name)
+        : "DocumentsDownloadError";
+
+    return Response.json({ error: message, code }, { status: 500 });
+  }
 }
