@@ -1,10 +1,17 @@
 import { ddb, DOCUMENTS_TABLE } from "@/lib/aws";
 import { QueryCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { getAuthenticatedUser, unauthorized } from "@/lib/auth-server";
 
-// List documents for a user
+// List documents for the authenticated user
 export async function GET(request: Request) {
+  let user;
+  try {
+    user = await getAuthenticatedUser(request);
+  } catch {
+    return unauthorized();
+  }
+
   const { searchParams } = new URL(request.url);
-  const userId = searchParams.get("userId") || "default";
   const category = searchParams.get("category");
 
   try {
@@ -12,7 +19,7 @@ export async function GET(request: Request) {
       new QueryCommand({
         TableName: DOCUMENTS_TABLE,
         KeyConditionExpression: "userId = :uid",
-        ExpressionAttributeValues: { ":uid": userId },
+        ExpressionAttributeValues: { ":uid": user.userId },
       })
     );
 
@@ -22,7 +29,6 @@ export async function GET(request: Request) {
       docs = docs.filter((d) => d.category === category);
     }
 
-    // Sort by uploadedAt descending
     docs.sort((a, b) => (b.uploadedAt || "").localeCompare(a.uploadedAt || ""));
 
     return Response.json({ documents: docs, total: docs.length });
@@ -39,13 +45,20 @@ export async function GET(request: Request) {
 
 // Delete a document
 export async function DELETE(request: Request) {
-  const { userId, documentId } = await request.json();
+  let user;
+  try {
+    user = await getAuthenticatedUser(request);
+  } catch {
+    return unauthorized();
+  }
+
+  const { documentId } = await request.json();
 
   try {
     await ddb.send(
       new DeleteCommand({
         TableName: DOCUMENTS_TABLE,
-        Key: { userId, documentId },
+        Key: { userId: user.userId, documentId },
       })
     );
 

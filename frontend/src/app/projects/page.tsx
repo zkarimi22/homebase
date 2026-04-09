@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import FadeIn from "@/components/FadeIn";
-import { useAuth } from "@/lib/auth";
+import { authFetch } from "@/lib/api";
 import {
   Plus,
   Trash2,
@@ -53,8 +53,6 @@ const priorities = ["low", "medium", "high"];
 const filters = ["all", "planned", "in_progress", "completed"];
 
 export default function ProjectsPage() {
-  const { user } = useAuth();
-  const userId = user?.userId || "default";
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
@@ -67,7 +65,7 @@ export default function ProjectsPage() {
 
   const fetchProjects = useCallback(async () => {
     try {
-      const res = await fetch(`/api/projects?userId=${userId}`);
+      const res = await authFetch("/api/projects");
       const data = await res.json();
       setProjects(data.projects || []);
     } catch {
@@ -75,7 +73,7 @@ export default function ProjectsPage() {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, []);
 
   useEffect(() => {
     fetchProjects();
@@ -85,11 +83,10 @@ export default function ProjectsPage() {
     e.preventDefault();
     if (!newTitle.trim()) return;
     setCreating(true);
-    await fetch("/api/projects", {
+    await authFetch("/api/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        userId,
         title: newTitle,
         description: newDesc,
         priority: newPriority,
@@ -107,16 +104,16 @@ export default function ProjectsPage() {
 
   const advanceStatus = async (project: Project) => {
     const nextStatus = statusFlow[project.status]?.next || "planned";
-    await fetch(`/api/projects/${project.projectId}`, {
+    await authFetch(`/api/projects/${project.projectId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, status: nextStatus }),
+      body: JSON.stringify({ status: nextStatus }),
     });
     await fetchProjects();
   };
 
   const deleteProject = async (project: Project) => {
-    await fetch(`/api/projects/${project.projectId}?userId=${userId}`, {
+    await authFetch(`/api/projects/${project.projectId}`, {
       method: "DELETE",
     });
     await fetchProjects();

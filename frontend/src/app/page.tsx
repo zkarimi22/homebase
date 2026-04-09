@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import FadeIn from "@/components/FadeIn";
 import { useAuth } from "@/lib/auth";
+import { authFetch } from "@/lib/api";
 import { useChat } from "@ai-sdk/react";
 import {
   property,
@@ -66,7 +67,6 @@ const monthDay = today.toLocaleDateString("en-US", {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const userId = user?.userId || "default";
   const [query, setQuery] = useState("");
   const [docResults, setDocResults] = useState<DocResult[]>([]);
   const [showResults, setShowResults] = useState(false);
@@ -83,12 +83,12 @@ export default function Dashboard() {
   const searchDocs = useCallback(async (q: string) => {
     if (q.length < 2) { setDocResults([]); return; }
     try {
-      const res = await fetch(`/api/documents/search?userId=${userId}&q=${encodeURIComponent(q)}`);
+      const res = await authFetch(`/api/documents/search?q=${encodeURIComponent(q)}`);
       const data = await res.json();
       setDocResults(data.results || []);
       setShowResults(true);
     } catch { setDocResults([]); }
-  }, [userId]);
+  }, []);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);

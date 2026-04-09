@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import FadeIn from "@/components/FadeIn";
-import { useAuth } from "@/lib/auth";
+import { authFetch } from "@/lib/api";
 import { FileText, Upload, X, Download, Trash2, Loader2 } from "lucide-react";
 
 const categories = ["all", "mortgage", "insurance", "tax", "receipt", "inspection", "warranty", "other"];
@@ -18,8 +18,6 @@ type Doc = {
 };
 
 export default function DocumentsPage() {
-  const { user } = useAuth();
-  const userId = user?.userId || "default";
   const [filter, setFilter] = useState("all");
   const [docs, setDocs] = useState<Doc[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +47,7 @@ export default function DocumentsPage() {
 
   const fetchDocs = useCallback(async () => {
     try {
-      const res = await fetch(`/api/documents?userId=${userId}`);
+      const res = await authFetch("/api/documents");
       if (!res.ok) {
         throw new Error(await readErrorMessage(res, "Failed to load documents"));
       }
@@ -62,7 +60,7 @@ export default function DocumentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, []);
 
   useEffect(() => {
     fetchDocs();
@@ -74,11 +72,10 @@ export default function DocumentsPage() {
     try {
       for (const file of files) {
         // 1. Get presigned URL
-        const res = await fetch("/api/documents/upload", {
+        const res = await authFetch("/api/documents/upload", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            userId,
             fileName: file.name,
             fileType: file.type,
             fileSize: file.size,
@@ -125,7 +122,7 @@ export default function DocumentsPage() {
   };
 
   const handleDownload = async (doc: Doc) => {
-    const res = await fetch("/api/documents/download", {
+    const res = await authFetch("/api/documents/download", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ s3Key: doc.s3Key }),
@@ -140,10 +137,10 @@ export default function DocumentsPage() {
 
   const handleDelete = async (doc: Doc) => {
     setError("");
-    const res = await fetch("/api/documents", {
+    const res = await authFetch("/api/documents", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, documentId: doc.documentId }),
+      body: JSON.stringify({ documentId: doc.documentId }),
     });
     if (!res.ok) {
       setError(await readErrorMessage(res, "Failed to delete document"));

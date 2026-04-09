@@ -2,19 +2,26 @@ import { s3, ddb, DOCUMENTS_BUCKET, DOCUMENTS_TABLE } from "@/lib/aws";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
+import { getAuthenticatedUser, unauthorized } from "@/lib/auth-server";
 
 export async function POST(request: Request) {
-  const { userId, fileName, fileType, fileSize, category } = await request.json();
+  let user;
+  try {
+    user = await getAuthenticatedUser(request);
+  } catch {
+    return unauthorized();
+  }
 
-  if (!userId || !fileName || !fileType) {
+  const { fileName, fileType, fileSize, category } = await request.json();
+
+  if (!fileName || !fileType) {
     return Response.json({ error: "Missing required fields" }, { status: 400 });
   }
 
   try {
     const documentId = `doc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const s3Key = `${userId}/${documentId}/${fileName}`;
+    const s3Key = `${user.userId}/${documentId}/${fileName}`;
 
-    // Generate presigned upload URL (5 min expiry)
     const command = new PutObjectCommand({
       Bucket: DOCUMENTS_BUCKET,
       Key: s3Key,
@@ -23,12 +30,11 @@ export async function POST(request: Request) {
 
     const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
 
-    // Store metadata in DynamoDB
     await ddb.send(
       new PutCommand({
         TableName: DOCUMENTS_TABLE,
         Item: {
-          userId,
+          userId: user.userId,
           documentId,
           name: fileName,
           category: category || "uncategorized",

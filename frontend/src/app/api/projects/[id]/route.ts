@@ -1,15 +1,18 @@
 import { ddb, PROJECTS_TABLE } from "@/lib/aws";
 import { UpdateCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { getAuthenticatedUser, unauthorized } from "@/lib/auth-server";
 
 // Update project
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const body = await request.json();
-  const { userId, ...updates } = body;
-
-  if (!userId) {
-    return Response.json({ error: "Missing userId" }, { status: 400 });
+  let user;
+  try {
+    user = await getAuthenticatedUser(request);
+  } catch {
+    return unauthorized();
   }
+
+  const { id } = await params;
+  const updates = await request.json();
 
   // Build update expression dynamically
   const expressions: string[] = [];
@@ -39,7 +42,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const result = await ddb.send(
     new UpdateCommand({
       TableName: PROJECTS_TABLE,
-      Key: { userId, projectId: id },
+      Key: { userId: user.userId, projectId: id },
       UpdateExpression: `SET ${expressions.join(", ")}`,
       ExpressionAttributeNames: names,
       ExpressionAttributeValues: values,
@@ -52,14 +55,19 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 // Delete project
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  let user;
+  try {
+    user = await getAuthenticatedUser(request);
+  } catch {
+    return unauthorized();
+  }
+
   const { id } = await params;
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get("userId") || "default";
 
   await ddb.send(
     new DeleteCommand({
       TableName: PROJECTS_TABLE,
-      Key: { userId, projectId: id },
+      Key: { userId: user.userId, projectId: id },
     })
   );
 

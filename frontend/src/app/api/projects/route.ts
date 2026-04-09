@@ -1,43 +1,62 @@
 import { ddb, PROJECTS_TABLE } from "@/lib/aws";
 import { QueryCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { getAuthenticatedUser, unauthorized } from "@/lib/auth-server";
 
 // List projects
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get("userId") || "default";
-  const status = searchParams.get("status");
-
-  const result = await ddb.send(
-    new QueryCommand({
-      TableName: PROJECTS_TABLE,
-      KeyConditionExpression: "userId = :uid",
-      ExpressionAttributeValues: { ":uid": userId },
-    })
-  );
-
-  let projects = result.Items || [];
-
-  if (status && status !== "all") {
-    projects = projects.filter((p) => p.status === status);
+  let user;
+  try {
+    user = await getAuthenticatedUser(request);
+  } catch {
+    return unauthorized();
   }
 
-  projects.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+  const { searchParams } = new URL(request.url);
+  const status = searchParams.get("status");
 
-  return Response.json({ projects, total: projects.length });
+  try {
+    const result = await ddb.send(
+      new QueryCommand({
+        TableName: PROJECTS_TABLE,
+        KeyConditionExpression: "userId = :uid",
+        ExpressionAttributeValues: { ":uid": user.userId },
+      })
+    );
+
+    let projects = result.Items || [];
+
+    if (status && status !== "all") {
+      projects = projects.filter((p) => p.status === status);
+    }
+
+    projects.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+
+    return Response.json({ projects, total: projects.length });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to load projects";
+    return Response.json({ error: message }, { status: 500 });
+  }
 }
 
 // Create project
 export async function POST(request: Request) {
-  const { userId, title, description, priority, budget } = await request.json();
+  let user;
+  try {
+    user = await getAuthenticatedUser(request);
+  } catch {
+    return unauthorized();
+  }
 
-  if (!userId || !title) {
+  const { title, description, priority, budget } = await request.json();
+
+  if (!title) {
     return Response.json({ error: "Missing required fields" }, { status: 400 });
   }
 
   const projectId = `prj_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
   const item = {
-    userId,
+    userId: user.userId,
     projectId,
     title,
     description: description || "",

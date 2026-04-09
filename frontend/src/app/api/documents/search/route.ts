@@ -1,9 +1,16 @@
 import { ddb, DOCUMENTS_TABLE } from "@/lib/aws";
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { getAuthenticatedUser, unauthorized } from "@/lib/auth-server";
 
 export async function GET(request: Request) {
+  let user;
+  try {
+    user = await getAuthenticatedUser(request);
+  } catch {
+    return unauthorized();
+  }
+
   const { searchParams } = new URL(request.url);
-  const userId = searchParams.get("userId") || "default";
   const q = (searchParams.get("q") || "").toLowerCase();
 
   if (!q || q.length < 2) {
@@ -15,7 +22,7 @@ export async function GET(request: Request) {
       new QueryCommand({
         TableName: DOCUMENTS_TABLE,
         KeyConditionExpression: "userId = :uid",
-        ExpressionAttributeValues: { ":uid": userId },
+        ExpressionAttributeValues: { ":uid": user.userId },
       })
     );
 
