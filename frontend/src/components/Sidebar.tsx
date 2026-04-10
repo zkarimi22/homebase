@@ -42,7 +42,7 @@ export default function Sidebar() {
           {/* Logo */}
           <div className="flex flex-col items-center px-2 mb-6">
             <Image
-              src="/opendoor-img.png"
+              src="/opendoor-img.webp"
               alt="Homebase"
               width={40}
               height={40}
